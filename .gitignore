@@ -1,0 +1,24 @@
+# Virtual environment
+venv/
+.venv/
+.env
+*.conf
+*.ini
+*.yaml
+*.yml
+config.py
+secrets.py
+*.db
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+.vscode/
+.DS_Store
+dist/
+build/
+*.egg-info/
+.coverage
+.pytest_cache/

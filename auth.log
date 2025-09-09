@@ -1,0 +1,17 @@
+Sep  9 10:45:01 server sshd[1234]: Failed password for invalid user admin from 192.168.1.50 port 4242 ssh2
+Sep  9 10:45:03 server sshd[1234]: Failed password for root from 192.168.1.60 port 4243 ssh2
+Sep  9 10:45:05 server sshd[1234]: Accepted password for validuser from 192.168.1.70 port 4244 ssh2
+Sep  9 10:46:10 server nmap[4321]: Nmap scan detected from 10.0.0.25
+Sep  9 10:47:22 webserver httpd[2222]: GET /login HTTP/1.1" 200 4523
+Sep  9 10:47:23 webserver httpd[2222]: GET /admin HTTP/1.1" 404 512
+Sep  9 10:47:24 webserver httpd[2222]: GET /etc/passwd HTTP/1.1" 404 234
+Sep  9 10:47:30 server sshd[1234]: Failed password for user test from 172.16.0.5 port 4444 ssh2
+Failed password for invalid user admin from 192.168.1.50 port 22 ssh2
+Failed password for invalid user admin from 192.168.1.50 port 22 ssh2
+Failed password for invalid user admin from 192.168.1.50 port 22 ssh2
+Failed password for invalid user admin from 192.168.1.50 port 22 ssh2
+Failed password for invalid user admin from 192.168.1.50 port 22 ssh2
+Nmap scan detected against 10.0.0.5
+Nmap scan detected against 10.0.0.5
+Nmap scan detected against 10.0.0.5
+Nmap scan detected against 10.0.0.5
