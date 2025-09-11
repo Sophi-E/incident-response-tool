@@ -1,12 +1,3 @@
-"""
-threat_intel.py - Query threat intelligence sources (VirusTotal, IPInfo, AbuseIPDB)
-and enrich suspicious IPs with context + threat scoring.
-
-This version is defensive about types: numeric fields returned as strings
-are converted to ints before arithmetic so static type-checkers won't complain
-and runtime errors are avoided.
-"""
-
 from typing import Any, Dict
 import requests
 import logging
@@ -15,10 +6,6 @@ log = logging.getLogger(__name__)
 
 
 def _safe_int(value: Any, default: int = 0) -> int:
-    """
-    Convert value to int safely. Accepts int, float, numeric-strings.
-    Returns `default` on failure or None-like values.
-    """
     try:
         if value is None:
             return default
@@ -124,17 +111,6 @@ class ThreatIntel:
     # Main Enrichment
     # ----------------------------
     def enrich_ip(self, ip: str) -> Dict[str, Any]:
-        """
-        Returns a normalized enrichment dict:
-        {
-            "ip": "...",
-            "virustotal": {...},
-            "ipinfo": {...},
-            "abuseipdb": {...},
-            "score": int,
-            "recommendation": "BLOCK"|"ALERT"|"MONITOR"|"ALLOW"
-        }
-        """
         vt = {}
         ipi = {}
         abuse = {}

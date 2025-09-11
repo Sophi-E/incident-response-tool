@@ -44,24 +44,13 @@ def start_services(cfg):
 
 
 def handle_event(event, cfg, db, responder, ti):
-    """
-    Called by LogMonitor when a suspicious pattern is found.
-    event is a dict:
-        {
-            'type': 'failed_login',
-            'ip': '1.2.3.4',
-            'count': 6,
-            'first_seen': ts,
-            'last_seen': ts,
-            'raw_lines': [...],
-            'user': 'root' or None
-        }
-    """
-    LOG.info("Incident detected: %s", event)
-    # Enrich with threat intel (non-blocking)
+    LOG.info("🚨 Incident detected: %s", event)
+
+    # --- Threat Intel Enrichment ---
     intel = {}
     try:
         intel = ti.enrich_ip(event["ip"])
+        LOG.info("🔍 Threat intel: %s", intel)
     except Exception as e:
         LOG.warning("Threat intel enrichment failed: %s", e)
 
@@ -76,28 +65,26 @@ def handle_event(event, cfg, db, responder, ti):
         "intel": intel,
     }
 
-    # Persist incident
+    # --- Save incident ---
     incident_id = db.insert_incident(incident)
-    LOG.info("Incident logged with id=%s", incident_id)
+    LOG.info("💾 Incident logged with id=%s", incident_id)
 
-    # Decide on response - basic policy: block if intel suggests malicious OR threshold exceeded
+    # --- Response policy ---
     should_block = False
-    vt_malicious = intel.get("virustotal", {}).get("malicious_count", 0)
-    if vt_malicious > 0:
+    if intel.get("recommendation") == "BLOCK":
         should_block = True
 
-    # if threshold exceeded (we already are in detection) we block
     if event.get("count", 0) >= cfg.get("detection", {}).get("failed_login_threshold", 5):
         should_block = True
 
     if should_block:
         action = responder.block_ip(event["ip"], reason="auto-detect - brute force / intel")
         db.mark_incident_action(incident_id, action)
-        LOG.info("Responder action: %s", action)
+        LOG.info("🛑 Responder action: %s", action)
     else:
-        LOG.info("No automatic block triggered for %s", event["ip"])
-        # still notify via webhook if configured
+        LOG.info("⚠️ No auto-block triggered for %s", event["ip"])
         responder.notify(event, intel)
+
 
 
 def run_forever(cfg):
