@@ -182,4 +182,4 @@ class ReportGenerator:
                 self.build_report()
             except Exception as e:
                 print(f"[ReportGenerator] Error: {e}")
-            time.sleep(60)
+            time.sleep(60 * 60 * 24)
