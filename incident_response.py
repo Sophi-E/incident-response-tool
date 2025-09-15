@@ -13,6 +13,7 @@ from responder import Responder
 from incident_db import IncidentDB
 from report_generator import ReportGenerator
 from threat_intel import ThreatIntel
+from alerting import DiscordAlert
 
 LOG = logging.getLogger("irat")
 LOG.setLevel(logging.INFO)
@@ -33,17 +34,19 @@ def start_services(cfg):
     db = IncidentDB(cfg.get("database_path", "./incidents.db"))
     responder = Responder(cfg.get("responder", {}), db=db)
     ti = ThreatIntel(cfg.get("threat_intel", {}))
+    discord_cfg = cfg.get("alerts", {}).get("discord", {})
+    alert = DiscordAlert(discord_cfg)
     lm = LogMonitor(
         path=cfg.get("log_path"),
-        callback=lambda ev: handle_event(ev, cfg, db, responder, ti),
+        callback=lambda ev: handle_event(ev, cfg, db, responder, ti, alert),
         poll_interval=cfg.get("monitor_interval_secs", 1.0),
         detection_config=cfg.get("detection", {}),
     )
 
-    return lm, db, responder
+    return lm, db, responder, alert
 
 
-def handle_event(event, cfg, db, responder, ti):
+def handle_event(event, cfg, db, responder, ti, alert):
     LOG.info("🚨 Incident detected: %s", event)
 
     # --- Threat Intel Enrichment ---
@@ -64,6 +67,18 @@ def handle_event(event, cfg, db, responder, ti):
         "raw_lines": "\n".join(event.get("raw_lines", [])[:20]),
         "intel": intel,
     }
+
+    #--- Send alert ---
+    if alert.enabled:
+        alert_msg = (f"🚨 Incident Detected\n"
+        f"Type: {incident['type']}\n"
+        f"IP: {incident['ip']}\n"
+        f"Count: {incident['count']}\n"
+        f"User: {incident.get('user','-')}\n"
+        f"First Seen: {incident['first_seen']}\n"
+        f"Last Seen: {incident['last_seen']}")
+        
+        alert.send(alert_msg)
 
     # --- Save incident ---
     incident_id = db.insert_incident(incident)
@@ -88,7 +103,7 @@ def handle_event(event, cfg, db, responder, ti):
 
 
 def run_forever(cfg):
-    lm, db, responder = start_services(cfg)
+    lm, db, responder, alert = start_services(cfg)
     try:
         LOG.info("Starting log monitor...")
         lm.start()
